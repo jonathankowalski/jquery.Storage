@@ -166,6 +166,9 @@
 		},
 
 		__getDefaultValue: function(key, defval, context){
+			if(!context){
+				context = 'cookie';
+			}
 			if(defval){
 				this.set(key, defval, context);
 				return defval;
