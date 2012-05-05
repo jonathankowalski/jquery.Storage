@@ -9,6 +9,7 @@
 			}
 			else var expires = "";
 			document.cookie = key+"="+value+expires+"; path=/";
+			return true;
 		},
 		getItem: function(key){
 			var keyComplete = key + "=";
@@ -33,29 +34,30 @@
 		},
 
 		removeItem: function(key){
-			this.create(key,"",-1);
+			return this.create(key,"",-1);
+		},
+
+		setItem: function(key, value){
+			return this.create(key, value);
 		}
-	}
+	};	
 
-	var storage = {
-
-		contexts: {			
-			"session": "session",
-			"local": "local",
-			"cookie": "cookie"
+	var contextsDefines = {
+		"session": {			
+			enabled: true,
+			storageInterface: window.sessionStorage
 		},
-
-		enabled: {
-			"local": true,
-			"session": true,
-			"cookie": true
-		},		
-
-		storageInterface: {
-			"local": window.localStorage,
-			"session": window.sessionStorage,
-			"cookie": cookieManager
+		"local": {			
+			enabled: true,
+			storageInterface: window.localStorage
 		},
+		"cookie": {			
+			enabled: true,
+			storageInterface: cookieManager
+		}
+	};
+
+	var storage = {	
 
 		init: function(params){
 			this.params = $.extend({				
@@ -63,10 +65,10 @@
 				verbose: true				
 			}, params);
 			if(!window.localStorage){
-				this.enabled["local"] = false;
+				contextsDefines["local"].enabled = false;
 			}
 			if(!window.sessionStorage){
-				this.enabled["session"] = false;
+				contextsDefines["session"].enabled = false;
 			}
 			return this;
 		},			
@@ -75,6 +77,16 @@
 			var keyValues = this.__parseKeyValues(key, value);
 			var context = this.__catchContext(context);
 			return this.__addObjectIn(keyValues, context);
+		},
+
+		setLocal: function(key, value){
+			return this.set(key, value, 'local');
+		},
+		setSession: function(key, value){
+			return this.set(key, value, 'session');
+		},
+		setCookie: function(key, value){
+			return this.set(key, value, 'cookie');
 		},
 
 		__parseKeyValues: function(key, value){
@@ -104,14 +116,14 @@
 		},	
 
 		__isSupported: function(context){
-			return this.enabled[context];
+			return contextsDefines[context].enabled;
 		},	
 
 		__addObjectIn: function(element, context){
 			for (var key in element){				
 				if(element.hasOwnProperty(key)){
 					var value = this.__stringifyValue(element[key]);													
-					this.addMethods[context](key, value);
+					contextsDefines[context].storageInterface.setItem(key, value);
 				}				
 			}	
 			return true;
@@ -122,28 +134,38 @@
 				return JSON.stringify(value);
 			}
 			return value;
-		},
+		},	
 
-		addMethods: {
-			"local": function(key, value){			
-				window.localStorage[key] = value;	
-			},
-			"session": function(key, value){			
-				window.sessionStorage[key] = value;	
-			},
-			"cookie":  function(key, value){				
-				document.cookie = key+"="+value+"; path=/";				
-			}
-		},		
-
-		get: function(key, context){
-			var context = this.__catchContext(context);								
+		get: function(key, defval, context){
+			var context = this.__catchContext(context);									
 			if(!context){
 				var elem = this.__getFromAllContexts(key)
 			} else {
-				var elem = this.storageInterface[context].getItem(key);
+				var elem = contextsDefines[context].storageInterface.getItem(key);
+			}			
+			if(elem == null){
+				return this.__getDefaultValue(key, defval, context);
 			}
 			return this.__getValue(elem);
+		},
+
+		getFromLocal: function(key, defval){
+			return this.get(key, defval, 'local');
+		},
+		getFromSession: function(key, defval){
+			return this.get(key, defval, 'session');
+		},
+		getFromCookie: function(key, defval){
+			return this.get(key, defval, 'cookie');
+		},
+
+		__getDefaultValue: function(key, defval, context){
+			if(defval){
+				this.set(key, defval, context);
+				return defval;
+			} else {
+				return null;
+			}			
 		},
 
 		__getValue: function(elem){
@@ -155,9 +177,9 @@
 		},
 
 		__getFromAllContexts: function(key){			
-			for(var context in this.contexts){				
-				if(this.contexts.hasOwnProperty(context)){
-					var element = this.storageInterface[context].getItem(key);
+			for(var context in contextsDefines){				
+				if(contextsDefines.hasOwnProperty(context)){
+					var element = contextsDefines[context].storageInterface.getItem(key);
 					if(element != null){
 						return element;
 					}
@@ -171,14 +193,24 @@
 			if(!context){
 				return this.__removeFromAllContexts(key)
 			} else {
-				return this.storageInterface[context].removeItem(key);
+				return contextsDefines[context].storageInterface.removeItem(key);
 			}
 		},
 
+		removeFromLocal: function(key){
+			this.remove(key, 'local');
+		},
+		removeFromSession: function(key){
+			this.remove(key, 'session');
+		},
+		removeFromCookie: function(key){
+			this.remove(key, 'cookie');
+		},
+
 		__removeFromAllContexts: function(key){
-			for(var context in this.contexts){
-				if(this.contexts.hasOwnProperty(context)){
-					this.storageInterface[context].removeItem(key);
+			for(var context in contextsDefines){
+				if(contextsDefines.hasOwnProperty(context)){
+					contextsDefines[context].storageInterface.removeItem(key);
 				}
 			}
 			return true;
@@ -189,48 +221,16 @@
 			if(!context){
 				this.__clearAllStorages();
 			} else {
-				this.storageInterface[context].clear();
+				contextsDefines[context].storageInterface.clear();
 			}
 		},
 
 		__clearAllStorages: function(){
-			for(var context in this.contexts){
-				if(this.contexts.hasOwnProperty(context)){
-					this.storageInterface[context].clear();
+			for(var context in contextsDefines){
+				if(contextsDefines.hasOwnProperty(context)){
+					contextsDefines[context].storageInterface.clear();
 				}
 			}			
-		},
-
-		api: {
-			"get": function(args, context){				
-				return this.get(args, context);
-			},
-			"set": function(key, value, context){
-				if(!context){
-					context = value;
-					value = false;
-				}				
-				return this.set(key, value, context);	
-			},
-			"remove": function(key, context){
-				return this.remove(key, context);
-			}
-		},
-
-		__noSuchMethod__: function(funcname, args){
-			var allows = ['get', 'set', 'remove'];			
-			for (var i = 0; i<allows.length; i++){
-				var method = allows[i];
-				if(funcname.indexOf(method) == 0){
-					var context = funcname.replace(method, '').toLowerCase();
-					args.push(context);					
-					return this.api[method].apply(this, args);					
-				}
-			}
-			if(this.params.verbose){
-				throw ('Nonexistent method');
-			}
-			return false;
 		}
 		
 	};
