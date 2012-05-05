@@ -1,7 +1,7 @@
-============
-jQuery Store
-============
+==============
+jQuery Storage
+==============
 
 Simple API permettant de gérer le storage avec jquery
 
-jQuery Store permet un fallback de localStorage et sessionStorage vers les cookies
+jQuery Storage permet un fallback de localStorage et sessionStorage vers les cookies en cas de non-support par le navigateur
