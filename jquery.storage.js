@@ -241,6 +241,6 @@
 		
 	};
 
-	$.store = storage.init();
+	$.storage = storage.init();
 
 })(jQuery)
