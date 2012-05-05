@@ -2,4 +2,6 @@
 jQuery Store
 ============
 
-Simple API permettant de gérer les local ou session storage
+Simple API permettant de gérer le storage avec jquery
+
+jQuery Store permet un fallback de localStorage et sessionStorage vers les cookies
