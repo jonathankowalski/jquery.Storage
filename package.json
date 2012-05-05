@@ -1,0 +1,19 @@
+{
+	"name":"jquery.storage",
+	"version":"0.1",
+	"title":"jQuery Storage API",
+	"author":"Jonathan Kowalski",
+	"licenses": [
+	   {
+	       "type": "GPLv2",
+	       "url": "http://www.opensource.org/licenses/GPL-2.0"
+	   }
+	],
+	"dependencies":{
+		"jquery":"1.7"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git://github.com/jonathankowalski/jquery.Storage.git"
+	},
+}
