@@ -5,3 +5,5 @@ jQuery Storage
 Simple API permettant de gérer le storage avec jquery
 
 jQuery Storage permet un fallback de localStorage et sessionStorage vers les cookies en cas de non-support par le navigateur
+
+Voir: http://jonathankowalski.fr/blog/2012/05/un-plugin-jquery-pour-manipuler-le-storage-html/
