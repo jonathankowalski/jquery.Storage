@@ -2,20 +2,23 @@
 
 	var cookieManager = {
 		create: function(key, value, days){
-			if (days) {
-				var date = new Date();
-				date.setTime(date.getTime()+(days*24*60*60*1000));
+			var date = new Date(),
+				expires = "",
+				oneDayMs = 24*60*60*1000;
+			if (days) {				
+				date.setTime( date.getTime() + ( days*oneDayMs ) );
 				var expires = "; expires="+date.toGMTString();
-			}
-			else var expires = "";
+			}			
 			document.cookie = key+"="+value+expires+"; path=/";
 			return true;
 		},
 		getItem: function(key){
-			var keyComplete = key + "=";
-			var cookies = document.cookie.split(';');
-			for(var i=0;i < cookies.length;i++) {
-				var cookie = cookies[i];
+			var keyComplete = key + "=",
+				cookies = document.cookie.split(';'),
+				i = 0,
+				cookie;
+			for( ; i < cookies.length ; i++ ) {
+				cookie = cookies[i];
 				while (cookie.charAt(0)==' '){
 					cookie = cookie.substring(1,cookie.length);
 				}
@@ -27,8 +30,9 @@
 		},
 
 		clear: function(){
-			var cookies = document.cookie.split(";");
-			for (var i = 0; i < cookies.length; i++){
+			var cookies = document.cookie.split(";"),
+				i = 0;
+			for ( ; i < cookies.length ; i++){
   				this.removeItem(cookies[i].split("=")[0]);
   			}
 		},
@@ -74,8 +78,8 @@
 		},			
 
 		set: function(key, value, context){
-			var keyValues = this.__parseKeyValues(key, value);
-			var context = this.__catchContext(context);
+			var keyValues = this.__parseKeyValues(key, value),
+				context = this.__catchContext(context);
 			return this.__addObjectIn(keyValues, context);
 		},
 
@@ -120,9 +124,11 @@
 		},	
 
 		__addObjectIn: function(element, context){
-			for (var key in element){				
+			var key,
+				value;
+			for (key in element){				
 				if(element.hasOwnProperty(key)){
-					var value = this.__stringifyValue(element[key]);													
+					value = this.__stringifyValue(element[key]);													
 					contextsDefines[context].storageInterface.setItem(key, value);
 				}				
 			}	
@@ -130,11 +136,11 @@
 		},		
 
 		__stringifyValue: function(value){
-			if(typeof(value) == 'object'){
-				if(typeof(JSON) != 'undefined'){				
+			if( typeof(value) == 'object' ){
+				if( typeof(JSON) != 'undefined' ){				
 					return JSON.stringify(value);
-				} else if (this.params.verbose) {
-					throw ('JSON is needed but unsupported !');
+				} else if ( this.params.verbose ) {
+					throw ( 'JSON is needed but unsupported !' );
 				} else {
 					return false;
 				}
@@ -143,11 +149,12 @@
 		},	
 
 		get: function(key, defval, context){
-			var context = this.__catchContext(context);									
+			var context = this.__catchContext(context),
+				elem;									
 			if(!context){
-				var elem = this.__getFromAllContexts(key)
+				elem = this.__getFromAllContexts(key)
 			} else {
-				var elem = contextsDefines[context].storageInterface.getItem(key);
+				elem = contextsDefines[context].storageInterface.getItem(key);
 			}			
 			if(elem == null){
 				return this.__getDefaultValue(key, defval, context);
@@ -186,9 +193,11 @@
 		},
 
 		__getFromAllContexts: function(key){			
-			for(var context in contextsDefines){				
+			var context,
+				element;
+			for(context in contextsDefines){				
 				if(contextsDefines.hasOwnProperty(context)){
-					var element = contextsDefines[context].storageInterface.getItem(key);
+					element = contextsDefines[context].storageInterface.getItem(key);
 					if(element != null){
 						return element;
 					}
@@ -217,7 +226,8 @@
 		},
 
 		__removeFromAllContexts: function(key){
-			for(var context in contextsDefines){
+			var context;
+			for(context in contextsDefines){
 				if(contextsDefines.hasOwnProperty(context)){
 					contextsDefines[context].storageInterface.removeItem(key);
 				}
@@ -235,7 +245,8 @@
 		},
 
 		__clearAllStorages: function(){
-			for(var context in contextsDefines){
+			var context;
+			for(context in contextsDefines){
 				if(contextsDefines.hasOwnProperty(context)){
 					contextsDefines[context].storageInterface.clear();
 				}
